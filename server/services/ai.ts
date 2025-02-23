@@ -49,3 +49,35 @@ export async function detectPriority(text: string): Promise<number> {
     return 0;
   }
 }
+
+export async function generateResponse(text: string): Promise<string> {
+  if (!text || text.trim().length === 0) {
+    return "Cannot generate response for empty text.";
+  }
+  try {
+    const result = await model.generateContent(
+      `Generate a concise, professional response to this message: ${text}`
+    );
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error in generateResponse:', error);
+    return "Error generating response.";
+  }
+}
+
+export async function generateDailyDigest(messages: string[]): Promise<string> {
+  if (!messages || messages.length === 0) {
+    return "No messages to digest.";
+  }
+  try {
+    const result = await model.generateContent(
+      `Create a concise daily digest summarizing these messages: ${messages.join("\n")}`
+    );
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error in generateDailyDigest:', error);
+    return "Error generating digest.";
+  }
+}
