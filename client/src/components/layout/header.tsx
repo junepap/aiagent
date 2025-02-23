@@ -1,15 +1,16 @@
+
 import { Bell, User } from "lucide-react";
 import { useNotifications } from "@/lib/notification";
 import { useLocation } from "wouter";
 import React, { useState, createContext, useContext } from 'react';
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -27,9 +28,11 @@ function ThemeToggle() {
   const { theme, setTheme } = useContext(ThemeContext);
 
   const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme?.(newTheme);
-    document.documentElement.classList.toggle('dark');
+    if (setTheme) {
+      const newTheme = theme === 'dark' ? 'light' : 'dark';
+      setTheme(newTheme);
+      document.documentElement.classList.toggle('dark');
+    }
   };
 
   return (
@@ -40,7 +43,7 @@ function ThemeToggle() {
 }
 
 export function Header() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications } = useNotifications();
   const [, setLocation] = useLocation();
   const [theme, setTheme] = useState('light');
 
@@ -54,26 +57,15 @@ export function Header() {
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-medium text-primary-foreground flex items-center justify-center">
-                      {unreadCount}
-                    </span>
-                  )}
                 </Button>
               </SheetTrigger>
               <SheetContent>
-                <SheetHeader className="flex flex-row justify-between items-center">
+                <SheetHeader>
                   <SheetTitle>Notifications</SheetTitle>
-                  <Button variant="ghost" size="sm" onClick={markAllAsRead}>
-                    Mark all as read
-                  </Button>
                 </SheetHeader>
                 <div className="mt-4 space-y-4">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className="flex items-start gap-4 p-4 rounded-lg"
-                    >
+                  {notifications?.map((notification) => (
+                    <div key={notification.id} className="p-4 rounded-lg bg-muted">
                       {notification.content}
                     </div>
                   ))}
@@ -91,7 +83,7 @@ export function Header() {
                   Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setLocation("/settings")}>
-                  Settings  
+                  Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setLocation("/logout")}>
