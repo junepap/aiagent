@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { users, messages, aiModels } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { User, InsertUser, Message, InsertMessage, AiModel, InsertAiModel } from "@shared/schema";
 
 if (!process.env.DATABASE_URL) {
@@ -98,9 +98,6 @@ export class PostgresStorage implements IStorage {
       .set({ active })
       .where(eq(aiModels.id, id));
   }
-}
-
-export const storage = new PostgresStorage();
 
   async getMessagesByDateRange(start: Date, end: Date): Promise<Message[]> {
     return await db.select()
@@ -108,3 +105,6 @@ export const storage = new PostgresStorage();
       .where(sql`created_at >= ${start} AND created_at <= ${end}`)
       .orderBy(messages.createdAt);
   }
+}
+
+export const storage = new PostgresStorage();
