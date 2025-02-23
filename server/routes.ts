@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getEmails } from "./services/gmail";
 import { getChannelMessages, sendMessage as sendSlackMessage } from "./services/slack";
+import { getWhatsAppMessages, sendWhatsAppMessage } from "./services/whatsapp";
 import { summarizeText, analyzeSentiment, detectPriority, generateResponse } from "./services/ai";
 import { insertMessageSchema, type InsertMessage } from "@shared/schema";
 import { createInsertSchema } from "drizzle-zod";
@@ -116,6 +117,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to process message" });
     }
   });
+
+  // WhatsApp routes
+  app.get("/api/whatsapp/messages", async (req, res) => {
+    try {
+      const messages = await getWhatsAppMessages();
+      for (const message of messages) {
+        const insertMessage: InsertMessage = {
+          platform: "whatsapp",
+          externalId: message.externalId,
+          content: message.content,
+          summary: message.summary,
+          sentiment: message.sentiment,
+          priority: message.priority,
+          processed: message.processed,
+          metadata: message.metadata,
+          createdAt: message.createdAt,
+        };
+        await storage.createMessage(insertMessage);
+      }
+      res.json(messages);
+    } catch (error) {
+      console.error("WhatsApp error:", error);
+      res.status(500).json({ message: "Failed to fetch WhatsApp messages" });
+    }
+  });
+
+  // Daily digest route
+  app.get("/api/digest", async (req, res) => {
+    try {
+      const messages = await storage.getMessagesByDateRange(
+        new Date(Date.now() - 24 * 60 * 60 * 1000), 
+        new Date()
+      );
+      const digest = await generateDailyDigest(messages.map(m => m.content));
+      res.json({ digest });
+    } catch (error) {
+      console.error("Digest error:", error);
+      res.status(500).json({ message: "Failed to generate digest" });
+    }
+  });
+
 
   // AI Model routes
   app.get("/api/ai/models", async (req, res) => {

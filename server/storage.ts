@@ -20,6 +20,8 @@ const client = postgres(process.env.DATABASE_URL, {
 const db = drizzle(client);
 
 export interface IStorage {
+  // Message operations with date range
+  getMessagesByDateRange(start: Date, end: Date): Promise<Message[]>;
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -99,3 +101,10 @@ export class PostgresStorage implements IStorage {
 }
 
 export const storage = new PostgresStorage();
+
+  async getMessagesByDateRange(start: Date, end: Date): Promise<Message[]> {
+    return await db.select()
+      .from(messages)
+      .where(sql`created_at >= ${start} AND created_at <= ${end}`)
+      .orderBy(messages.createdAt);
+  }
