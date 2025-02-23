@@ -5,10 +5,18 @@ import { eq } from "drizzle-orm";
 import type { User, InsertUser, Message, InsertMessage, AiModel, InsertAiModel } from "@shared/schema";
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable must be set");
+  console.error("DATABASE_URL is not set. Please check your environment variables.");
+  process.exit(1);
 }
 
-const client = postgres(process.env.DATABASE_URL);
+// Configure Postgres client with connection settings
+const client = postgres(process.env.DATABASE_URL, {
+  max: 1,
+  idle_timeout: 20,
+  connect_timeout: 10,
+});
+
+// Create Drizzle ORM instance
 const db = drizzle(client);
 
 export interface IStorage {
