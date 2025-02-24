@@ -30,7 +30,7 @@ export function SlackView() {
     if (!newMessage.trim()) return;
 
     try {
-      await apiRequest("POST", "/api/slack/messages", { content: newMessage });
+      await apiRequest("POST", "/api/slack/messages", { content: newMessage , sender : "self"});
       await queryClient.invalidateQueries({ queryKey: ["/api/slack/messages"] });
       setNewMessage("");
     } catch (error) {

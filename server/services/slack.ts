@@ -48,17 +48,17 @@ export async function getChannelMessages(
     const messages: Message[] = [];
 
     for (const msg of slackMessages) {
-      const summary = await summarizeText(msg.text || "");
-      const sentiment = await analyzeSentiment(msg.text || "");
+    //  const summary = await summarizeText(msg.text || "");
+     // const sentiment = await analyzeSentiment(msg.text || "");
 
       messages.push({
         id: 0,
         platform: "slack",
         externalId: msg.ts || "",
         content: msg.text || "",
-        summary,
-        sentiment,
-        priority: sentiment < 3 ? 1 : 0,
+        summary:null,
+        sentiment:null,
+        priority: null,
         processed: true,
         metadata: msg,
         createdAt: new Date()

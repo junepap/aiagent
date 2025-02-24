@@ -84,26 +84,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: new Date(),
       };
 
-      // Enhanced AI processing with parallel execution for better performance
-      const [summary, sentiment, priority] = await Promise.all([
-        summarizeText(message.content),
-        analyzeSentiment(message.content),
-        detectPriority(message.content)
-      ]);
+      const sender = req.body.sender
+      if (sender != undefined && sender === "self") {
 
-      // Generate response suggestion if it's a high priority message
-      let suggestedResponse = null;
-      if (priority === 1) {
-        suggestedResponse = await generateResponse(message.content);
+        console.log("SENDER DETECTED")
+        message.metadata = {
+          ...message.metadata,
+        }
+      } else {
+        // Enhanced AI processing with parallel execution for better performance
+        const [summary, sentiment, priority] = await Promise.all([
+          summarizeText(message.content),
+          analyzeSentiment(message.content),
+          detectPriority(message.content)
+        ]);
+
+        // Generate response suggestion if it's a high priority message
+        let suggestedResponse = null;
+        if (priority === 1) {
+          suggestedResponse = await generateResponse(message.content);
+        }
+
+        message.summary = summary;
+        message.sentiment = sentiment;
+        message.priority = priority;
+        message.metadata = {
+          ...message.metadata,
+          suggestedResponse
+        };
       }
-
-      message.summary = summary;
-      message.sentiment = sentiment;
-      message.priority = priority;
-      message.metadata = {
-        ...message.metadata,
-        suggestedResponse
-      };
 
       // Save to database
       const savedMessage = await storage.createMessage(message);
@@ -147,7 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/digest", async (req, res) => {
     try {
       const messages = await storage.getMessagesByDateRange(
-        new Date(Date.now() - 24 * 60 * 60 * 1000), 
+        new Date(Date.now() - 24 * 60 * 60 * 1000),
         new Date()
       );
       const digest = await generateDailyDigest(messages.map(m => m.content));
