@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { authRouter } from "./services/auth";
 import { storage } from "./storage";
 import { getEmails } from "./services/gmail";
 import { getChannelMessages, sendMessage as sendSlackMessage } from "./services/slack";
@@ -10,6 +11,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { ZodError } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  app.use('/api', authRouter);
   // Error handling middleware
   app.use((err: any, req: any, res: any, next: any) => {
     if (err instanceof ZodError) {
@@ -22,6 +24,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Gmail routes
+  app.get("/api/auth/gmail/status", async (req, res) => {
+    try {
+      const token = await storage.getGmailToken();
+      if (!token) {
+        return res.json({ connected: false });
+      }
+      
+      // Verify token is valid by making a test API call
+      const gmail = google.gmail({ version: 'v1', auth: token });
+      await gmail.users.getProfile({ userId: 'me' });
+      
+      res.json({ connected: true });
+    } catch (error) {
+      console.error("Error checking Gmail status:", error);
+      await storage.setGmailToken(''); // Clear invalid token
+      res.json({ connected: false });
+    }
+  });
+
   app.get("/api/gmail/messages", async (req, res) => {
     try {
       const emails = await getEmails();

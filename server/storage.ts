@@ -38,6 +38,7 @@ export interface IStorage {
   getActiveAiModels(): Promise<AiModel[]>;
   createAiModel(model: InsertAiModel): Promise<AiModel>;
   updateAiModelStatus(id: number, active: boolean): Promise<void>;
+  getGmailToken(): Promise<string | null>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -104,6 +105,20 @@ export class PostgresStorage implements IStorage {
       .from(messages)
       .where(sql`created_at >= ${start} AND created_at <= ${end}`)
       .orderBy(messages.createdAt);
+  }
+
+  async getGmailToken(): Promise<string | null> {
+    const result = await db.select()
+      .from(users)
+      .where(eq(users.id, 1)) // TODO: Use actual user ID
+      .limit(1);
+    return result[0]?.gmailToken || null;
+  }
+
+  async setGmailToken(token: string): Promise<void> {
+    await db.update(users)
+      .set({ gmailToken: token })
+      .where(eq(users.id, 1)); // TODO: Use actual user ID
   }
 }
 

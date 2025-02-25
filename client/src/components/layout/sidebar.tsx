@@ -28,18 +28,15 @@ export function Sidebar() {
         <ul role="list" className="flex flex-1 flex-col gap-y-7 px-6 py-4">
           {navigation.map((item) => (
             <li key={item.name}>
-              <Link href={item.href}>
-                <a
-                  className={cn(
+              <Link href={item.href} className={cn(
                     "group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6",
                     location === item.href
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                       : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                   )}
                 >
-                  <item.icon className="h-6 w-6 shrink-0" />
-                  {item.name}
-                </a>
+                <item.icon className="h-6 w-6 shrink-0" />
+                {item.name}
               </Link>
             </li>
           ))}
